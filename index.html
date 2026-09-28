@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Geodata | Demo | Template</title>
+    <link rel="icon" type="image/png" href="./images/geodata-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="./images/geodata-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="./images/geodata-96x96.png" sizes="96x96">
+
+    <!-- Load the ArcGIS Maps SDK for JavaScript from CDN -->
+    <script type="module" src="https://js.arcgis.com/5.0/"></script>
+    
+    <link rel="stylesheet" href="./src/styles/main.css" />
+  </head>
+  <body>
+    <noscript>
+      <p style="padding: 1rem; font-family: sans-serif;">
+        Denne applikasjonen krever JavaScript. Vennligst aktiver JavaScript i nettleseren din.
+      </p>
+    </noscript>
+    <div id="calcite-theme" class="calcite-mode-dark">
+      <calcite-shell content-behind>
+        <calcite-navigation slot="header">
+          <calcite-navigation-logo slot="logo"></calcite-navigation-logo>
+          <calcite-navigation-user slot="user"></calcite-navigation-user>
+        </calcite-navigation>
+
+        <calcite-loader active></calcite-loader>
+
+        <calcite-shell-panel slot="panel-start" position="start" display-mode="float-content" height="l" layout="vertical" aria-label="Verktøypanel">
+          <calcite-action-bar id="start-action-bar" slot="action-bar" intl-collapse="Minimere" intl-expand="Maksimere">
+            <calcite-action data-action-id="layers" icon="layers" text="Kartlag"></calcite-action>
+            <calcite-action data-action-id="basemaps" icon="basemap" text="Bakgrunnskart"></calcite-action>
+            <calcite-action data-action-id="legend" icon="legend" text="Tegnforklaring"></calcite-action>
+            <calcite-action data-action-id="bookmarks" icon="bookmark" text="Bokmerker"></calcite-action>
+            <calcite-action data-action-id="print" icon="print" text="Utskrift"></calcite-action>
+          </calcite-action-bar>
+
+          <!-- Map Components Panels -->
+          <calcite-panel heading="Kartlag" height-scale="l" width-scale="m" data-panel-id="layers">
+            <arcgis-layer-list id="layers-container" reference-element="map-component"></arcgis-layer-list>
+          </calcite-panel>
+          <calcite-panel heading="Bakgrunnskart" height-scale="l" width-scale="m" data-panel-id="basemaps" hidden>
+            <arcgis-basemap-gallery id="basemaps-container" reference-element="map-component"></arcgis-basemap-gallery>
+          </calcite-panel>
+          <calcite-panel heading="Tegnforklaring" height-scale="l" width-scale="m" data-panel-id="legend" hidden>
+            <arcgis-legend id="legend-container" reference-element="map-component"></arcgis-legend>
+          </calcite-panel>
+          <calcite-panel heading="Bokmerker" height-scale="l" width-scale="m" data-panel-id="bookmarks" hidden>
+            <arcgis-bookmarks id="bookmarks-container" reference-element="map-component"></arcgis-bookmarks>
+          </calcite-panel>
+          <calcite-panel heading="Utskrift" height-scale="l" width-scale="m" data-panel-id="print" hidden>
+            <arcgis-print id="print-container" reference-element="map-component" include-default-templates="false" allowed-formats="all" allowed-layouts="all"></arcgis-print>
+          </calcite-panel>
+        </calcite-shell-panel>
+
+        <!-- Assistant Drawer -->
+        <calcite-shell-panel slot="panel-end" display-mode="float-content" aria-label="Assistentpanel">
+          <calcite-action-bar id="end-action-bar" slot="action-bar">
+            <calcite-action data-action-id="assistant" icon="speech-bubbles" text="Kart-assistent"></calcite-action>
+          </calcite-action-bar>
+          <calcite-panel data-panel-id="assistant" height-scale="l" width-scale="m" hidden>
+            <arcgis-assistant
+              log-enabled
+              copy-enabled
+              reference-element="#map-component"
+              heading="Kart-assistent"
+              description="Utforsk dataene i dette kartet"
+              entry-message="Hei! Jeg er din KI-assistent for dette kartet. Hvordan kan jeg hjelpe deg i dag?">
+              <arcgis-assistant-navigation-agent></arcgis-assistant-navigation-agent>
+              <arcgis-assistant-data-exploration-agent></arcgis-assistant-data-exploration-agent>
+              <arcgis-assistant-help-agent></arcgis-assistant-help-agent>
+            </arcgis-assistant>
+          </calcite-panel>
+        </calcite-shell-panel>
+        
+        
+        <arcgis-map id="map-component" aria-label="Kart">
+          <arcgis-search slot="top-right" aria-label="Søk"></arcgis-search>
+          <arcgis-zoom slot="bottom-right"></arcgis-zoom>
+        </arcgis-map>
+        <div id="alert-container" aria-live="polite" aria-atomic="true"></div>
+      </calcite-shell>
+
+    </div> <!-- Calcite-theme-->
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>

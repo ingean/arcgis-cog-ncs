@@ -1,0 +1,52 @@
+:root {
+  color-scheme: dark; /* Dark style scrollbars etc. The .calcite-mode-* class on
+                         #calcite-theme is the source of truth — this just keeps
+                         native UI (scrollbars, form controls) consistent. */
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+  }
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+}
+
+calcite-loader {
+  align-self: center;
+  justify-self: center;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media print {
+  calcite-navigation,
+  calcite-shell-panel,
+  arcgis-search,
+  arcgis-zoom,
+  #alert-container {
+    display: none !important;
+  }
+
+  arcgis-map {
+    width: 100%;
+    height: 100vh;
+  }
+}
