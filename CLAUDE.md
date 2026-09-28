@@ -4,10 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development
 
-This is a vanilla JS project with no build step. Run it with a local HTTPS server (required by ArcGIS):
+This is a vanilla JS project with no build step. Run it with a local server:
 
 ```
-http-server -S -C /Users/inge/Documents/dev/ssl/localhost.pem -K /Users/inge/Documents/dev/ssl/localhost-key.pem
+npx http-server
+```
+
+Then open `http://localhost:8080`. Browsers treat `localhost` as a secure context even over plain HTTP, so no TLS certificate is needed for the ArcGIS components themselves.
+
+The one exception is OAuth2 sign-in (`authenticate()` in `App.js`): the redirect URI must be registered on the OAuth app (`appId` in `config.js`) in ArcGIS Online. If only an `https://localhost...` redirect URI is registered there, sign-in will fail over plain HTTP — either add `http://localhost:8080` as a valid redirect URI on the app, or run with a local HTTPS cert instead:
+
+```
+http-server -S -C <path-to-cert>.pem -K <path-to-cert-key>.pem
 ```
 
 There are no tests, linters, or package dependencies.
@@ -19,11 +27,12 @@ The app is a single-page ArcGIS mapping template using [Calcite Design System](h
 **HTML is the declarative source of truth** for UI structure and Norwegian labels. Panel headings, action labels, and assistant copy live in `index.html`, not in config.
 
 **Key files:**
-- `src/config.js` — the file a template user edits: `appId`, `mapItemId`, `suggestedPrompts`. Frozen; `validateConfig()` runs from `App` constructor.
+- `src/config.js` — the file a template user edits: `appId`, `mapItemId`, `cogLayerUrls`, `cogLayerTitle`, `cogLayerClasses`, `suggestedPrompts`. Frozen; `validateConfig()` runs from `App` constructor.
 - `src/main.js` — minimal entry point: instantiate `App`, call `start()`, surface fatal errors via `NotificationService`.
-- `src/App.js` — orchestrates the lifecycle: `#authenticate()` → `#initMap()` → `#initPanels()` → `#wirePortalItem()`. Owns the post-auth DOM writes (user element, navigation logo).
+- `src/App.js` — orchestrates the lifecycle: `#authenticate()` → `#initMap()` → `#initPanels()` → `#wirePortalItem()`. Owns the post-auth DOM writes (user element, navigation logo). `#wirePortalItem()` also triggers `#addCogLayer()` once the view is ready.
 - `src/lib/dom.js` — `qs(selector)` (throws), `qsOptional(selector)` (returns null), and a frozen `SELECTORS` constant for every well-known DOM target.
 - `src/lib/OAuth2.js` — `authenticate(appId)` returns `{ portal, userInfo, signIn, signOut }`. No DOM coupling, no module-level state. "Not signed in" is a normal branch (`userInfo: null`); other errors throw.
+- `src/lib/CogLayer.js` — `createClassifiedRenderer(classes)` builds a `RasterColormapRenderer` (from `@arcgis/core/renderers/RasterColormapRenderer.js`) out of `config.cogLayerClasses` (`{ value, label, color }` entries); its `colormapInfos` labels also drive the "Tegnforklaring" legend panel. `createCogLayer({ url, title, renderer })` wraps a single `ImageryTileLayer` around a Cloud Optimized GeoTIFF URL, clones the renderer (layers must not share one instance), and awaits `layer.load()`. `createCogGroupLayer({ urls, title, renderer })` combines several COG part-files (e.g. a Spark/Databricks output directory split into `part-NNNNN-*.tif` shards) into one `GroupLayer` (`visibilityMode: 'inherited'`, so it toggles as a single unit in the layer list); failed parts don't block the rest — it returns `{ groupLayer, failed }`. The source host must be a CORS-enabled HTTPS server (e.g. an Azure Blob container with CORS rules for the app's origin) — the browser reads each COG via HTTP range requests, no ArcGIS Image Server required. The container used in this demo doesn't allow anonymous listing, so part filenames are hardcoded in `config.js` rather than discovered at runtime.
 - `src/lib/html.js` — `element(tag, attrs?, children?)` and `div(...)` factories; `appendChildren()` exported.
 - `src/components/PanelManager.js` — wires a `calcite-action-bar` to its `[data-panel-id]` siblings inside the same `calcite-shell-panel`. Validates pairings on construction; caches references; orphan actions (no matching panel) are allowed for external-link forks. Public API: `activate(id)`, `deactivate()`, `toggle(id)`, `activeId`.
 - `src/components/Alert.js` — `Alert` base + `ErrorAlert`/`WarningAlert`/`InfoAlert`/`ConfirmationAlert`. `KINDS` and `ICONS` constants. Validates `title`/`message`. Sets `role="alert"` for danger, `role="status"` otherwise. `close()` method.

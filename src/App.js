@@ -1,8 +1,9 @@
 import PanelManager from './components/PanelManager.js'
 import { authenticate } from './lib/OAuth2.js'
+import { createCogGroupLayer, createClassifiedRenderer } from './lib/CogLayer.js'
 import { qs, SELECTORS } from './lib/dom.js'
 import { validateConfig } from './config.js'
-import { notifyError } from './services/NotificationService.js'
+import { notifyError, notifyWarning } from './services/NotificationService.js'
 
 export default class App {
   #config
@@ -67,6 +68,24 @@ export default class App {
       const assistantElement = qs(SELECTORS.ASSISTANT)
       assistantElement.suggestedPrompts = this.#config.suggestedPrompts
       qs(SELECTORS.LOADER).hidden = true
+
+      this.#addCogLayer(event.target.map)
     })
+  }
+
+  async #addCogLayer(map) {
+    const { cogLayerUrls, cogLayerTitle, cogLayerClasses } = this.#config
+    try {
+      const renderer = createClassifiedRenderer(cogLayerClasses)
+      const { groupLayer, failed } = await createCogGroupLayer({ urls: cogLayerUrls, title: cogLayerTitle, renderer })
+      map.add(groupLayer)
+      if (failed.length > 0) {
+        failed.forEach((err) => console.error('Failed to load COG part:', err))
+        notifyWarning('Enkelte kartlagsdeler mangler', `${failed.length} av ${cogLayerUrls.length} deler av "${cogLayerTitle}" kunne ikke lastes.`)
+      }
+    } catch (err) {
+      console.error('Failed to load COG layer:', err)
+      notifyWarning('Kunne ikke laste kartlag', 'Cloud Optimized GeoTIFF-laget kunne ikke lastes. Sjekk URL-ene og CORS-konfigurasjonen i Azure.')
+    }
   }
 }
